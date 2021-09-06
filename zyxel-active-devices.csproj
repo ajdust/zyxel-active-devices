@@ -2,6 +2,11 @@
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
+    <!-- [note on 2021-09-06]
+         net5.0's network stack on Linux using OpenSSL appears to drop support for older security.
+         Such that error:14094410:SSL routines:ssl3_read_bytes:sslv3 alert handshake failure occurs
+         when connecting to the modem's self-signed cert which is served in an obsolete way.
+         Hence, using netcoreapp3.1 instead. -->
     <TargetFramework>netcoreapp3.1</TargetFramework>
     <RootNamespace>ZyxelActiveDevices</RootNamespace>
     <AssemblyName>ZyxelActiveDevices</AssemblyName>
