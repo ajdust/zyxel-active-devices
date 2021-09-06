@@ -39,7 +39,7 @@ namespace ZyxelActiveDevices
             await using var conn = new NpgsqlConnection(pgcs);
             await UpdateDataAsync(conn, devices, now);
         }
-        
+
         static async Task UpdateDataAsync(NpgsqlConnection conn, List<ZyxelClient.ActiveDevice> users, DateTime now)
         {
             foreach (var user in users)

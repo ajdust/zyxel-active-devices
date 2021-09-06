@@ -26,7 +26,20 @@ namespace ZyxelActiveDevices
             // Verify self-signed router certificate SHA-1
             var handler = new HttpClientHandler();
             handler.ServerCertificateCustomValidationCallback = (_, cert, _, _) =>
-                cert?.Thumbprint.Equals(creds.RouterCertThumbprint, StringComparison.OrdinalIgnoreCase) ?? false;
+            {
+                var match = cert?.Thumbprint
+                    .Equals(creds.RouterCertThumbprint, StringComparison.OrdinalIgnoreCase) ?? false;
+                if (_verbose)
+                {
+                    if (!match)
+                        Console.Error.WriteLine(
+                            $"Expected `{creds.RouterCertThumbprint}` but found `{cert?.Thumbprint}`");
+                    else
+                        Console.WriteLine("Thumbprint matched");
+                }
+
+                return match;
+            };
 
             _creds = creds;
             _client = new HttpClient(handler);
@@ -39,7 +52,7 @@ namespace ZyxelActiveDevices
             var dpw = Util.Decrypt(_creds.EncryptedPassword, _creds.Key);
             if (_verbose)
                 Console.WriteLine($"Found username: `{dun}`, password: `{dpw}`");
-            
+
             using var content = new FormUrlEncodedContent(
                 new Dictionary<string, string> { ["admin_username"] = dun, ["admin_password"] = dpw }!);
 
@@ -93,8 +106,8 @@ namespace ZyxelActiveDevices
             // It also replaces spaces with '-' and cuts special characters (including '|' and '/').
             var raw = await GetRawActiveUsers(sessionKey.Key);
             return raw.Split('|', StringSplitOptions.RemoveEmptyEntries)
-                .Select(re => re.Split('/', StringSplitOptions.TrimEntries))
-                .Where(es => es.Length == 6 && int.TryParse(es[5], out _))
+                .Select(re => re.Split('/').Select(x => x.Trim()).ToList())
+                .Where(es => es.Count == 6 && int.TryParse(es[5], out _))
                 .Select(es => new ActiveDevice(es[1], es[2], es[3], es[4], int.Parse(es[5])))
                 .ToList();
         }
